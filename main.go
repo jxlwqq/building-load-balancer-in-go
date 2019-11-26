@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -43,7 +44,7 @@ func (s *ServerPool) GetNextSibling() (*UpstreamServer, error) {
 			return s.upstreamServers[index], nil
 		}
 	}
-	return nil, errors.New("there is not alive backend server")
+	return nil, errors.New("there is not alive upstream server")
 }
 
 func (b *UpstreamServer) IsAlive() (alive bool) {
@@ -61,9 +62,22 @@ func (b *UpstreamServer) SetAlive(alive bool) {
 
 // 轮询
 func roundRobin(w http.ResponseWriter, r *http.Request) {
-	// todo
+
+	sibling, err := serverPool.GetNextSibling()
+	if err != nil {
+		http.Error(w, "there is not alive upstream server", http.StatusServiceUnavailable)
+	}
+	if sibling != nil {
+		sibling.ReverseProxy.ServeHTTP(w, r)
+		return
+	}
 }
 
+var serverPool ServerPool
+
 func main() {
-	// todo
+	addr := ":8080"
+	if err := http.ListenAndServe(addr, http.HandlerFunc(roundRobin)); err != nil {
+		log.Fatal(err)
+	}
 }
