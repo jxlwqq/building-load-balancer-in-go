@@ -20,13 +20,12 @@ func TestGetServerAmount(t *testing.T) {
 		mux:          sync.RWMutex{},
 		ReverseProxy: httputil.ReverseProxy{},
 	}
-	sp := ServerPool{
+	sp := ServersPool{
 		upstreamServers: nil,
 		current:         0,
 	}
 
-	sp.upstreamServers = append(sp.upstreamServers, &us1)
-	sp.upstreamServers = append(sp.upstreamServers, &us2)
+	sp.upstreamServers = append(sp.upstreamServers, &us1, &us2)
 
 	if sp.GetServerAmount() != 2 {
 		t.Errorf("length of server pool is not right.")
